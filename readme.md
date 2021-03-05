@@ -12,4 +12,3 @@ If you have previously loaded in this data, you can wipe your database 100% clea
 npm run blowitallaway
 ```
 
-## Zahra Khare
