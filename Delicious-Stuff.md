@@ -1473,3 +1473,96 @@ exports.getStoresByTag = async (req, res) => {
     res.redirect('/');
   }
   ```
+  
+## Sending Email With Node.js
+- use [Mailtrap](https://mailtrap.io) to fake a mail server. So instead of actually sending email to your users, it will just store it in Mailtrap, where you'll be able to quickly see who the emails are being sent to, what they look like, when they've been sent.
+- in `variables.env`
+  - change the username and password to the mailtrap credentials listed for SMTP
+- in a new `handlers/mail.js` file
+  - import nodemailer, pug, juice, htmlToText, and promisify packages
+  ```javascript
+  const nodemailer = require('nodemailer');
+  const pug = require('pug');
+  const juice = require('juice');
+  const htmlToText = require('html-to-text');
+  const promisify = require('es6-promisify');
+  ```
+  - we have `nodemailer` and we need to create what's called a transport, which is just different ways of sending email, SMTP being the most common. we'll use the `createTransport()` method provided by `nodemailer` and pass in a config object which contains fields for `host`, `port`, and `auth`
+  ```javascript
+  const transport = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT,
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS
+    }
+  });
+  ```
+  - when someone asks for a password reset, we're going to make a method called `send`, which will be asynchronous and take in some options (which will be passed in from the `forgot` method in the `authController`).
+  - then we'll create a `mailOptions` object with fields for `from`, `to`, `subject`, `html`, and `text` fields
+    - `from` is whatever email you'd like to send it from
+    - `to` will be the email from the user passed in through options
+    - `html` and `text` will be filled out later
+  - next we'll use `promisify` for the `sendMail()` method on transport, and bind it to transport object
+  - finally we'll return the `sendMail` variable using the `mailOptions`
+  ```javascript
+  exports.send = async (options) => {
+    const mailOptions = {
+      from: `Delicious App <noreply@zahra.com>`
+      to: options.user.email
+      html: 'This will be filled in later'
+      text: 'This will also be filled in later'
+    }
+    const sendMail = promisify(transport.sendMail, transport);
+    return sendMail(mailOptions);
+  };
+  ```
+- in `authController.js`
+  - import the `mail` handler
+  ```javascript
+  const mail = require('../handlers/mail');
+  ```
+  - then in the `forgot` method, use the `send` method from mail right after we generate the `resetURL` and before we flash them a success message and redirect them to the login page
+  - we'll pass in those options now with a config object which will include the `user`, `subject`, `resetURL`, and `filename`
+    - the `filename` will be used when we try to render out the HTML and look for a document called `password-reset.pug`
+  ```javascript
+    await mail.send({
+      user,
+      subject: 'Password Reset',
+      resetURL,
+      filename: 'password-reset'
+    });
+  ```
+- in `mail.js`
+  - we'll take care of the text and html values in our `mailOptions` variable by using the packages we imported
+  - first we'll create a function called `generateHTML` and that will take in two things, the `filename` and `options` (which will default to an empty object)
+    - we don't use `exports.generateHTML` because this function is not needed anywhere else outside the file, so we just use a regular `const`
+  - then we create a variable called `html`, and we use the pug library to use the `renderFile()`, which will take the name of the file we're looking for
+    - whenever you pass a function reference to something on your disk, you don't actually know where you are in the folder system. You might be in a directory called `handlers` which is in your project, and that project is on your desktop, which that desktop is in your C drive. But node.js doesn't know that. So what we can use is a special variable `__dirname`, which is available to us anywhere in our node.js project. It will tell us where we actually are in our project
+  - next we need to inline our CSS into our html by using the `juice` library;
+  ```javascript
+  const generateHTML = (filename, options = {}) => {
+    const html = pug.renderFile(`${__dirname}/../views/email/${filename}.pug`, options);
+    const inlined = juice(html);
+    return inlined;
+  };
+  ```
+  - then in our send method we create `html` and `text` variables
+  - html will be generated using our `generateHTML` method
+  - text will be genereated by the `htmlToText` library
+  ```javascript
+  exports.send = async (options) {
+    const html = generateHTML(options.filename, options);
+    const text = htmlToText.fromString(html);
+    
+    const mailOptions = {
+      to: `Delicious App <noreply@zahra.com>`,
+      from: options.user.mail,
+      subject: options.subject,
+      html,
+      text
+    }
+    const sendMail = promisifiy(transport.sendMail, transport);
+    return sendMail(mailOptions);
+  }
+  ```
