@@ -1057,7 +1057,7 @@ function loadPlaces(map) {
 }
 
 function makeMap(mapDiv, apiKey) {
-    if (!$(mapDiv)) return;
+    if (!$(mapDiv) || !$(mapDiv).length) return;
     // Make our map
     $(document).ready(function () {
         var map = new Mapp({
@@ -2849,6 +2849,10 @@ var _map = __webpack_require__(11);
 
 var _map2 = _interopRequireDefault(_map);
 
+var _heart = __webpack_require__(35);
+
+var _heart2 = _interopRequireDefault(_heart);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var apiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImZkYzIwZGI4NTZkNzIwMTRmZTIwYzMzOTYyMWFjOWIzZmE1ODkwZDk2MWFjZWMwNzUzNmJiOWYxY2FhMjlhMTU0ZmQ3MjRhNTA1ZDBlYzU5In0.eyJhdWQiOiIxMjkwOCIsImp0aSI6ImZkYzIwZGI4NTZkNzIwMTRmZTIwYzMzOTYyMWFjOWIzZmE1ODkwZDk2MWFjZWMwNzUzNmJiOWYxY2FhMjlhMTU0ZmQ3MjRhNTA1ZDBlYzU5IiwiaWF0IjoxNjEzOTk3OTU0LCJuYmYiOjE2MTM5OTc5NTQsImV4cCI6MTYxNjQ5OTk1NCwic3ViIjoiIiwic2NvcGVzIjpbImJhc2ljIl19.HXo5W01xOmzdsrGYQ78Sof4h3GEeVnUGXKYNyIS_7Kt9yNCGdDDrTgsFc4eil1nje3z5N1mNHEPsVnbk3ruFjZyw3lo3uhComng_IqnMZPLz6423WTx_9YYHeP86GWTTF9-i58LXlJ8y01iOnsF1MLaihmLJiLMS_4r108JfBfycV83sBTthsghL7hXm3tsTA-aslnTKTwxmufjSWfFHOlNh-NN2S7FJ2fbLdah_cm8ZVd6u0Wy5P3w0EoXkH14KmhRpC7WJQjNPRLzUKPSs9KqgkP4yzIA-eCxQeLa4hQunhhFN22sLPbAiLhog5JHblh6bkK__6D3EDT2V6omGnA";
@@ -2860,6 +2864,45 @@ var apiKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImZkYzIwZGI4NTZkNzIwMT
 (0, _typeAhead2.default)((0, _bling.$)(".search"));
 
 (0, _map2.default)("#map", apiKey);
+
+var heartForms = (0, _bling.$$)("form.heart");
+heartForms.on("submit", _heart2.default);
+
+/***/ }),
+/* 34 */,
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _axios = __webpack_require__(2);
+
+var _axios2 = _interopRequireDefault(_axios);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ajaxHeart(e) {
+    var _this = this;
+
+    e.preventDefault();
+    _axios2.default.post(this.action).then(function (res) {
+        var isHearted = _this.heart.classList.toggle("heart__button--hearted");
+        $(".heart-count").text(res.data.hearts.length);
+        if (isHearted) {
+            _this.heart.classList.add("heart__button--float");
+            setTimeout(function () {
+                _this.heart.classList.remove("heart__button--float");
+            }, 2500);
+        }
+    }).catch(console.error);
+}
+
+exports.default = ajaxHeart;
 
 /***/ })
 /******/ ]);

@@ -39,7 +39,7 @@ function loadPlaces(map, lat = 32.47, lng = 51.78) {
 }
 
 function makeMap(mapDiv, apiKey) {
-    if (!$(mapDiv)) return;
+    if (!$(mapDiv) || !$(mapDiv).length) return;
     // Make our map
     $(document).ready(function () {
         const map = new Mapp({
