@@ -52,6 +52,10 @@ function makeMap(mapDiv, apiKey) {
 
         map.addLayers();
 
+        map.addLogo({
+            url: "/images/icons/logo-dark.svg"
+        });
+
         map.addContextmenu({
             here: true,
             distance: true,
